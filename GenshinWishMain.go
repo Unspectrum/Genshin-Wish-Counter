@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/Unspectrum/Genshin-Wish-Counter/models"
+	"github.com/Unspectrum/Genshin-Wish-Counter/utils"
 	"io"
 	"net/http"
 	"net/url"
@@ -30,88 +32,10 @@ const (
 
 var API_URL = "https://hk4e-api-os.hoyoverse.com/event/gacha_info/api/getGachaLog"
 
-type GachaRequest struct {
-	AuthkeyVer string `json:"authkey_ver"`
-	SignType   string `json:"sign_type"`
-	AuthAppId  string `json:"auth_appid"`
-	InitType   string `json:"init_type"`
-	Lang       string `json:"lang"`
-	AuthKey    string `json:"authkey"`
-	Page       string `json:"page"`
-	Size       string `json:"size"`
-	EndId      string `json:"end_id"`
-	GachaType  string `json:"gacha_type"`
-}
-
-type ExampleGachaList struct {
-	UID       string `json:"uid"`
-	GachaType string `json:"gacha_type"`
-	ItemId    string `json:"item_id"`
-	Count     string `json:"count"`
-	Time      string `json:"time"`
-	Name      string `json:"name"`
-	Lang      string `json:"lang"`
-	ItemType  string `json:"item_type"`
-	RankType  string `json:"rank_type"`
-	Id        string `json:"id"`
-}
-
-type ExampleGachaData struct {
-	Page   string             `json:"page"`
-	Size   string             `json:"size"`
-	Total  string             `json:"total"`
-	List   []ExampleGachaList `json:"list"`
-	Region string             `json:"region"`
-}
-
-type ExampleGachaResponse struct {
-	RetCode int              `json:"retcode"`
-	Message string           `json:"message"`
-	Data    ExampleGachaData `json:"data"`
-}
-
-// Internal function to open file
-func openFile(filePath string) (*os.File, error) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return nil, err
-	}
-	return file, nil
-}
-
-// Internal function to read from file with certain delimiter
-// This function return empty string and error object if any error happen
-func readFileToStringArray(file *os.File, delim string) ([]string, error) {
-	dataBytes, err := io.ReadAll(file)
-	if err != nil {
-		return []string{}, err
-	}
-	return strings.Split(string(dataBytes), delim), nil
-}
-
-// Function to open file from filepath and split by delim.
-// This function return empty string and error object if any error happen
-func OpenFileToStringArray(filepath string, delim string) ([]string, error) {
-	file, err := openFile(filepath)
-	if err != nil {
-		return []string{}, err
-	}
-	lines, err := readFileToStringArray(file, delim)
-	return lines, nil
-}
-
 func GetInstallLocation(str string) string {
 	str = strings.ReplaceAll(str, warmUpStr, "")
 	str = strings.Split(str, "\\")[0]
 	return strings.ReplaceAll(str, streamAssetsStr, "")
-}
-
-func OpenReadFileToString(str string) (string, error) {
-	b, err := os.ReadFile(str)
-	if err != nil {
-		return "", err
-	}
-	return string(b), nil
 }
 
 func main() {
@@ -119,7 +43,7 @@ func main() {
 	dir, err := os.UserHomeDir()
 	check(err)
 	log := dir + logLocation
-	lines, err := OpenFileToStringArray(log, "\n")
+	lines, err := utils.OpenFileToStringArray(log, "\n")
 	check(err)
 	// var temp string
 	var installLocation string
@@ -130,7 +54,7 @@ func main() {
 		}
 	}
 	installLocation += dataFileLocation
-	DataOpen, err := OpenReadFileToString(installLocation)
+	DataOpen, err := utils.OpenReadFileToString(installLocation)
 	if err != nil {
 		panic(err)
 	}
@@ -141,7 +65,7 @@ func main() {
 	match := re.FindStringSubmatch(dataSplit[len(dataSplit)-1])[0]
 	match = strings.ReplaceAll(match, "&game_biz=", "")
 	match = strings.ReplaceAll(match, "authkey=", "")
-	ExampleGachaReq := GachaRequest{
+	ExampleGachaReq := models.GachaRequest{
 		AuthkeyVer: "1",
 		SignType:   "2",
 		AuthAppId:  "webview_gacha",
@@ -208,7 +132,7 @@ func main() {
 		if err != nil {
 			fmt.Println(err)
 		}
-		var GachaResponse ExampleGachaResponse
+		var GachaResponse models.GachaResponse
 		errnew := json.Unmarshal(b, &GachaResponse)
 		if errnew != nil {
 			panic(errnew)
