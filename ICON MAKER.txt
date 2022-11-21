@@ -1,0 +1,4 @@
+go install github.com/tc-hib/go-winres@latest
+go-winres simply --icon youricon.png
+go build
+If your app has a GUI: go-winres simply --icon icon.png --manifest gui
