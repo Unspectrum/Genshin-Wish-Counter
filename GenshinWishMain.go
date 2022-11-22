@@ -1,13 +1,16 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 
@@ -37,6 +40,31 @@ func GetInstallLocation(str string) string {
 	str = strings.ReplaceAll(str, warmUpStr, "")
 	str = strings.Split(str, "\\")[0]
 	return strings.ReplaceAll(str, streamAssetsStr, "")
+}
+
+var clear map[string]func() //create a map for storing clear funcs
+
+func init() {
+	clear = make(map[string]func()) //Initialize it
+	clear["linux"] = func() {
+		cmd := exec.Command("clear") //Linux example, its tested
+		cmd.Stdout = os.Stdout
+		cmd.Run()
+	}
+	clear["windows"] = func() {
+		cmd := exec.Command("cmd", "/c", "cls") //Windows example, its tested
+		cmd.Stdout = os.Stdout
+		cmd.Run()
+	}
+}
+
+func CallClear() {
+	value, ok := clear[runtime.GOOS] //runtime.GOOS -> linux, windows, darwin etc.
+	if ok {                          //if we defined a clear func for that platform:
+		value() //we execute it
+	} else { //unsupported platform
+		panic("Your platform is unsupported! I can't clear terminal screen :(")
+	}
 }
 
 func main() {
@@ -91,11 +119,11 @@ func main() {
 	q.Add("gacha_type", ExampleGachaReq.GachaType)
 
 	f := excelize.NewFile()
-	f.SetSheetName("Sheet1", "Event Banner 1")
-	f.SetCellValue("Event Banner 1", "A1", "TimeStamp")
-	f.SetCellValue("Event Banner 1", "B1", "Name")
-	f.SetCellValue("Event Banner 1", "C1", "Type")
-	f.SetCellValue("Event Banner 1", "D1", "Rarity")
+	f.SetSheetName("Sheet1", "Event Banner")
+	f.SetCellValue("Event Banner", "A1", "TimeStamp")
+	f.SetCellValue("Event Banner", "B1", "Name")
+	f.SetCellValue("Event Banner", "C1", "Type")
+	f.SetCellValue("Event Banner", "D1", "Rarity")
 	f.NewSheet("Weapon Banner")
 	f.SetCellValue("Weapon Banner", "A1", "TimeStamp")
 	f.SetCellValue("Weapon Banner", "B1", "Name")
@@ -106,7 +134,7 @@ func main() {
 	f.SetCellValue("Standard Banner", "B1", "Name")
 	f.SetCellValue("Standard Banner", "C1", "Type")
 	f.SetCellValue("Standard Banner", "D1", "Rarity")
-	f.SetColWidth("Event Banner 1", "A", "G", 20)
+	f.SetColWidth("Event Banner", "A", "G", 20)
 	f.SetColWidth("Weapon Banner", "A", "G", 20)
 	f.SetColWidth("Standard Banner", "A", "G", 20)
 	styleB5, errB5 := f.NewStyle(&excelize.Style{
@@ -126,9 +154,7 @@ func main() {
 	})
 	check(errHeader)
 
-	loopcounter := 2
-	totalwish := 0
-	currentBanner := "Event Banner 1"
+	currentBanner := "Event Banner"
 	DummyData := models.GachaDetail{
 		RateOn:               false,
 		Last5Stars:           "None",
@@ -159,6 +185,12 @@ func main() {
 		},
 	)
 
+	loopcounter := 2
+	totalwish := 0
+	EventCounter := 0
+	WeaponCounter := 0
+	StandardCounter := 0
+	MainCounter := 0
 	for {
 		API_URL_EXEC := API_URL + "?authkey=" + match + "&" + q.Encode()
 		response, err := http.Get(API_URL_EXEC)
@@ -272,6 +304,7 @@ func main() {
 				errB3 = f.SetCellStyle(currentBanner, fmt.Sprintf("A%v", strconv.Itoa(i+loopcounter)), fmt.Sprintf("D%v", strconv.Itoa(i+loopcounter)), styleB3)
 			}
 			totalwish++
+			MainCounter++
 			if i == 19 {
 				q.Set("end_id", value.Id)
 				loopcounter += 20
@@ -281,7 +314,7 @@ func main() {
 			if currentBanner == "Standard Banner" || currentBanner == "Weapon Banner" {
 				DummyData.RateOn = false
 			}
-			if currentBanner == "Event Banner 1" {
+			if currentBanner == "Event Banner" {
 				q.Set("init_type", "302")
 				q.Set("gacha_type", "302")
 				q.Set("end_id", "0")
@@ -301,6 +334,7 @@ func main() {
 				f.SetCellValue(currentBanner, "F6", "Wish Until Next 4 Stars Estimate")
 				f.SetCellValue(currentBanner, "G6", 10-DummyData.CountAfterLast4Stars)
 				errB4 = f.SetCellStyle(currentBanner, "F5", "G6", styleB4)
+				EventCounter = totalwish
 				totalwish = 0
 				loopcounter = 2
 				currentBanner = "Weapon Banner"
@@ -327,6 +361,7 @@ func main() {
 				f.SetCellValue(currentBanner, "F6", "Wish Until Next 4 Stars Estimate")
 				f.SetCellValue(currentBanner, "G6", 10-DummyData.CountAfterLast4Stars)
 				errB4 = f.SetCellStyle(currentBanner, "F5", "G6", styleB4)
+				WeaponCounter = totalwish
 				totalwish = 0
 				currentBanner = "Standard Banner"
 				DummyData.Last4StarsFlag = false
@@ -348,8 +383,30 @@ func main() {
 				f.SetCellValue(currentBanner, "F6", "Wish Until Next 4 Stars Estimate")
 				f.SetCellValue(currentBanner, "G6", 10-DummyData.CountAfterLast4Stars)
 				errB4 = f.SetCellStyle(currentBanner, "F5", "G6", styleB4)
-				break
+				StandardCounter = totalwish
 			}
+		}
+		CallClear()
+		fmt.Println(
+			" _____ _   _  _____ ___________   _____ _________________" + "\n" +
+				"/  ___| | | ||  ___|  ___| ___ \\ /  __ \\  _  | ___ \\ ___ \\" + "\n" +
+				"\\ `--.| |_| || |__ | |__ | |_/ / | /  \\/ | | | |_/ / |_/ /" + "\n" +
+				" `--. \\  _  ||  __||  __||  __/  | |   | | | |    /|  __/" + "\n" +
+				"/\\__/ / | | || |___| |___| |     | \\__/\\ \\_/ / |\\ \\| |" + "\n" +
+				"\\____/\\_| |_/\\____/\\____/\\_|      \\____/\\___/\\_| \\_\\_|",
+		)
+		fmt.Println("Please Kindly Wait While We Counting Your Genshin Wish OwO")
+		fmt.Println("Wish Count: ", MainCounter)
+		fmt.Println("Event Banner : ", EventCounter)
+		fmt.Println("Weapon Banner : ", WeaponCounter)
+		fmt.Println("Standard Banner : ", StandardCounter)
+		if StandardCounter > 0 {
+			fmt.Println("YAY We've Done Counting Your Genshin Wish OwO")
+			fmt.Println("Pweese Pwess Enter To Continue UwU")
+			fmt.Println("Bye Bye OwO")
+			fmt.Println()
+			bufio.NewReader(os.Stdin).ReadBytes('\n')
+			break
 		}
 	}
 
