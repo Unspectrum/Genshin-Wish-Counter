@@ -39,3 +39,23 @@ type Gacha struct {
 	RankType  string `json:"rank_type"`
 	Id        string `json:"id"`
 }
+
+type GachaDetail struct {
+	RateOn               bool
+	Last5Stars           string
+	Last4Stars           string
+	Last5StarsFlag       bool
+	Last4StarsFlag       bool
+	CountAfterLast5Stars int
+	CountAfterLast4Stars int
+}
+
+type Inventory struct {
+	ItemType  int
+	ItemLists []InventoryDetail
+}
+
+type InventoryDetail struct {
+	Name     string
+	Quantity int
+}
