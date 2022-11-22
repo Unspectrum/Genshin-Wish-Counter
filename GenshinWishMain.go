@@ -139,6 +139,26 @@ func main() {
 		Last4StarsFlag:       false,
 	}
 
+	var MyCharacters []models.Inventory
+	MyCharacters = append(MyCharacters,
+		models.Inventory{
+			ItemType: 5,
+		},
+		models.Inventory{
+			ItemType: 4,
+		},
+	)
+
+	var MyWeapons []models.Inventory
+	MyWeapons = append(MyWeapons,
+		models.Inventory{
+			ItemType: 5,
+		},
+		models.Inventory{
+			ItemType: 4,
+		},
+	)
+
 	for {
 		API_URL_EXEC := API_URL + "?authkey=" + match + "&" + q.Encode()
 		response, err := http.Get(API_URL_EXEC)
@@ -177,6 +197,37 @@ func main() {
 					DummyData.Last5StarsFlag = true
 					DummyData.CountAfterLast5Stars = totalwish
 				}
+				if value.ItemType == "Character" {
+					flags := 0
+					temp := models.InventoryDetail{
+						Name:     value.Name,
+						Quantity: 1,
+					}
+					for IData, Data := range MyCharacters[0].ItemLists {
+						if value.Name == Data.Name {
+							MyCharacters[0].ItemLists[IData].Quantity += 1
+							flags = 1
+						}
+					}
+					if len(MyCharacters[0].ItemLists) == 0 || flags == 0 {
+						MyCharacters[0].ItemLists = append(MyCharacters[0].ItemLists, temp)
+					}
+				} else if value.ItemType == "Weapon" {
+					flags := 0
+					temp := models.InventoryDetail{
+						Name:     value.Name,
+						Quantity: 1,
+					}
+					for IData, Data := range MyWeapons[0].ItemLists {
+						if value.Name == Data.Name {
+							MyWeapons[0].ItemLists[IData].Quantity += 1
+							flags = 1
+						}
+					}
+					if len(MyWeapons[0].ItemLists) == 0 || flags == 0 {
+						MyWeapons[0].ItemLists = append(MyWeapons[0].ItemLists, temp)
+					}
+				}
 			} else if rarity == 4 { //☆☆☆☆
 				f.SetCellValue(currentBanner, fmt.Sprintf("D%v", strconv.Itoa(i+loopcounter)), "☆☆☆☆")
 				errB4 = f.SetCellStyle(currentBanner, fmt.Sprintf("A%v", strconv.Itoa(i+loopcounter)), fmt.Sprintf("D%v", strconv.Itoa(i+loopcounter)), styleB4)
@@ -184,6 +235,37 @@ func main() {
 					DummyData.Last4Stars = value.Name
 					DummyData.Last4StarsFlag = true
 					DummyData.CountAfterLast4Stars = totalwish
+				}
+				if value.ItemType == "Character" {
+					flags := 0
+					temp := models.InventoryDetail{
+						Name:     value.Name,
+						Quantity: 1,
+					}
+					for IData, Data := range MyCharacters[1].ItemLists {
+						if value.Name == Data.Name {
+							MyCharacters[1].ItemLists[IData].Quantity += 1
+							flags = 1
+						}
+					}
+					if len(MyCharacters[1].ItemLists) == 0 || flags == 0 {
+						MyCharacters[1].ItemLists = append(MyCharacters[1].ItemLists, temp)
+					}
+				} else if value.ItemType == "Weapon" {
+					flags := 0
+					temp := models.InventoryDetail{
+						Name:     value.Name,
+						Quantity: 1,
+					}
+					for IData, Data := range MyWeapons[1].ItemLists {
+						if value.Name == Data.Name {
+							MyWeapons[1].ItemLists[IData].Quantity += 1
+							flags = 1
+						}
+					}
+					if len(MyWeapons[1].ItemLists) == 0 || flags == 0 {
+						MyWeapons[1].ItemLists = append(MyWeapons[1].ItemLists, temp)
+					}
 				}
 			} else { //☆☆☆
 				f.SetCellValue(currentBanner, fmt.Sprintf("D%v", strconv.Itoa(i+loopcounter)), "☆☆☆")
@@ -270,6 +352,48 @@ func main() {
 			}
 		}
 	}
+
+	f.NewSheet("Inventory")
+	f.SetCellValue("Inventory", "A1", "Character Name")
+	f.SetCellValue("Inventory", "B1", "Quantity")
+	f.SetCellValue("Inventory", "C1", "Rarity")
+
+	f.SetCellValue("Inventory", "E1", "Weapon Name")
+	f.SetCellValue("Inventory", "F1", "Quantity")
+	f.SetCellValue("Inventory", "G1", "Rarity")
+	errHeader = f.SetCellStyle("Inventory", "A1", "C1", styleHeader)
+	errHeader = f.SetCellStyle("Inventory", "E1", "G1", styleHeader)
+	f.SetColWidth("Inventory", "A", "E", 20)
+	loopcounter = 2
+	for index, items := range MyCharacters[0].ItemLists {
+		f.SetCellValue("Inventory", fmt.Sprintf("A%v", strconv.Itoa(index+loopcounter)), items.Name)
+		f.SetCellValue("Inventory", fmt.Sprintf("B%v", strconv.Itoa(index+loopcounter)), items.Quantity)
+		f.SetCellValue("Inventory", fmt.Sprintf("C%v", strconv.Itoa(index+loopcounter)), "☆☆☆☆☆")
+		errB5 = f.SetCellStyle("Inventory", fmt.Sprintf("A%v", strconv.Itoa(index+loopcounter)), fmt.Sprintf("C%v", strconv.Itoa(index+loopcounter)), styleB5)
+	}
+	loopcounter += len(MyCharacters[0].ItemLists)
+	for index, items := range MyCharacters[1].ItemLists {
+		f.SetCellValue("Inventory", fmt.Sprintf("A%v", strconv.Itoa(index+loopcounter)), items.Name)
+		f.SetCellValue("Inventory", fmt.Sprintf("B%v", strconv.Itoa(index+loopcounter)), items.Quantity)
+		f.SetCellValue("Inventory", fmt.Sprintf("C%v", strconv.Itoa(index+loopcounter)), "☆☆☆☆")
+		errB4 = f.SetCellStyle("Inventory", fmt.Sprintf("A%v", strconv.Itoa(index+loopcounter)), fmt.Sprintf("C%v", strconv.Itoa(index+loopcounter)), styleB4)
+	}
+
+	loopcounter = 2
+	for index, items := range MyWeapons[0].ItemLists {
+		f.SetCellValue("Inventory", fmt.Sprintf("E%v", strconv.Itoa(index+loopcounter)), items.Name)
+		f.SetCellValue("Inventory", fmt.Sprintf("F%v", strconv.Itoa(index+loopcounter)), items.Quantity)
+		f.SetCellValue("Inventory", fmt.Sprintf("G%v", strconv.Itoa(index+loopcounter)), "☆☆☆☆☆")
+		errB5 = f.SetCellStyle("Inventory", fmt.Sprintf("E%v", strconv.Itoa(index+loopcounter)), fmt.Sprintf("G%v", strconv.Itoa(index+loopcounter)), styleB5)
+	}
+	loopcounter += len(MyWeapons[0].ItemLists)
+	for index, items := range MyWeapons[1].ItemLists {
+		f.SetCellValue("Inventory", fmt.Sprintf("E%v", strconv.Itoa(index+loopcounter)), items.Name)
+		f.SetCellValue("Inventory", fmt.Sprintf("F%v", strconv.Itoa(index+loopcounter)), items.Quantity)
+		f.SetCellValue("Inventory", fmt.Sprintf("G%v", strconv.Itoa(index+loopcounter)), "☆☆☆☆")
+		errB4 = f.SetCellStyle("Inventory", fmt.Sprintf("E%v", strconv.Itoa(index+loopcounter)), fmt.Sprintf("G%v", strconv.Itoa(index+loopcounter)), styleB4)
+	}
+
 	if err := f.SaveAs("Genshin-Wishing.xlsx"); err != nil {
 		fmt.Println(err)
 	}
