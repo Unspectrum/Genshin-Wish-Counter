@@ -363,7 +363,7 @@ func main() {
 	f.SetCellValue("Inventory", "G1", "Rarity")
 	errHeader = f.SetCellStyle("Inventory", "A1", "C1", styleHeader)
 	errHeader = f.SetCellStyle("Inventory", "E1", "G1", styleHeader)
-	f.SetColWidth("Inventory", "A", "E", 20)
+	f.SetColWidth("Inventory", "A", "G", 20)
 	loopcounter = 2
 	for index, items := range MyCharacters[0].ItemLists {
 		f.SetCellValue("Inventory", fmt.Sprintf("A%v", strconv.Itoa(index+loopcounter)), items.Name)
