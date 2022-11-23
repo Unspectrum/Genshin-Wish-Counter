@@ -29,10 +29,12 @@ func check(e error) {
 const (
 	logLocation = "\\AppData\\LocalLow\\miHoYo\\Genshin Impact\\output_log.txt"
 	exp         = "(authkey=.+?game_biz=)"
+	Inventory   = "Inventory"
 )
 
 var (
-	ApiUrl = "https://hk4e-api-os.hoyoverse.com/event/gacha_info/api/getGachaLog"
+	ApiUrl  = "https://hk4e-api-os.hoyoverse.com/event/gacha_info/api/getGachaLog"
+	Banners = []string{"Event Banner", "Weapon Banner", "Standard Banner"}
 )
 
 var clear map[string]func() //create a map for storing clear funcs
@@ -97,41 +99,25 @@ func main() {
 	}
 	q := utils.GenerateGetParameter(params)
 
-	f := utils.NewExcel("Genshin-Wishing.xlsx").ExcelFile()
-	f.SetSheetName("Sheet1", "Event Banner")
-	f.SetCellValue("Event Banner", "A1", "TimeStamp")
-	f.SetCellValue("Event Banner", "B1", "Name")
-	f.SetCellValue("Event Banner", "C1", "Type")
-	f.SetCellValue("Event Banner", "D1", "Rarity")
-	f.NewSheet("Weapon Banner")
-	f.SetCellValue("Weapon Banner", "A1", "TimeStamp")
-	f.SetCellValue("Weapon Banner", "B1", "Name")
-	f.SetCellValue("Weapon Banner", "C1", "Type")
-	f.SetCellValue("Weapon Banner", "D1", "Rarity")
-	f.NewSheet("Standard Banner")
-	f.SetCellValue("Standard Banner", "A1", "TimeStamp")
-	f.SetCellValue("Standard Banner", "B1", "Name")
-	f.SetCellValue("Standard Banner", "C1", "Type")
-	f.SetCellValue("Standard Banner", "D1", "Rarity")
+	f := utils.NewExcel("Genshin-Wishing.xlsx")
+	f.ChangeSheetName("Sheet1", Banners[0])
+	f.GenerateSheets(Banners[1:])
+	f.SetCellValues(Banners, 'A', 1, []interface{}{"TimeStamp", "Name", "Type", "Rarity"})
 	f.SetColWidth("Event Banner", "A", "G", 20)
 	f.SetColWidth("Weapon Banner", "A", "G", 20)
 	f.SetColWidth("Standard Banner", "A", "G", 20)
-	styleB5, errB5 := f.NewStyle(&excelize.Style{
+	styleB5 := f.MakeStyle(&excelize.Style{
 		Fill: excelize.Fill{Type: "pattern", Color: []string{"#FFB13F"}, Pattern: 1},
 	})
-	check(errB5)
-	styleB4, errB4 := f.NewStyle(&excelize.Style{
+	styleB4 := f.MakeStyle(&excelize.Style{
 		Fill: excelize.Fill{Type: "pattern", Color: []string{"#D28FD6"}, Pattern: 1},
 	})
-	check(errB4)
-	styleB3, errB3 := f.NewStyle(&excelize.Style{
+	styleB3 := f.MakeStyle(&excelize.Style{
 		Fill: excelize.Fill{Type: "pattern", Color: []string{"#4E7CFF"}, Pattern: 1},
 	})
-	check(errB3)
-	styleHeader, errHeader := f.NewStyle(&excelize.Style{
+	styleHeader := f.MakeStyle(&excelize.Style{
 		Fill: excelize.Fill{Type: "pattern", Color: []string{"#B8E8FC"}, Pattern: 1},
 	})
-	check(errHeader)
 
 	currentBanner := "Event Banner"
 	DummyData := models.GachaDetail{
@@ -194,12 +180,13 @@ func main() {
 		for i, value := range GachaResponse.Data.List {
 			rarity, _ := strconv.ParseInt(value.RankType, 10, 64)
 			// fmt.Println(value.Time + "\t" + value.Name + "\t" + value.ItemType + "\t" + value.RankType + "\t" + currentBanner)
-			f.SetCellValue(currentBanner, fmt.Sprintf("A%v", strconv.Itoa(i+loopcounter)), value.Time)
-			f.SetCellValue(currentBanner, fmt.Sprintf("B%v", strconv.Itoa(i+loopcounter)), value.Name)
-			f.SetCellValue(currentBanner, fmt.Sprintf("C%v", strconv.Itoa(i+loopcounter)), value.ItemType)
+			// fmt.Sprintf("A%v", strconv.Itoa(i+loopcounter))
+			f.SetCellValues([]string{currentBanner}, 'A', i+loopcounter, []interface{}{value.Time})
+			f.SetCellValues([]string{currentBanner}, 'B', i+loopcounter, []interface{}{value.Name})
+			f.SetCellValues([]string{currentBanner}, 'C', i+loopcounter, []interface{}{value.ItemType})
 			if rarity == 5 { //☆☆☆☆☆
-				f.SetCellValue(currentBanner, fmt.Sprintf("D%v", strconv.Itoa(i+loopcounter)), "☆☆☆☆☆")
-				errB5 = f.SetCellStyle(currentBanner, fmt.Sprintf("A%v", strconv.Itoa(i+loopcounter)), fmt.Sprintf("D%v", strconv.Itoa(i+loopcounter)), styleB5)
+				f.SetCellValues([]string{currentBanner}, 'D', i+loopcounter, []interface{}{"☆☆☆☆☆"})
+				f.SetCellStyle(currentBanner, fmt.Sprintf("A%v", strconv.Itoa(i+loopcounter)), fmt.Sprintf("D%v", strconv.Itoa(i+loopcounter)), styleB5)
 				if DummyData.Last5StarsFlag == false {
 					if value.Name == "Keqing" || value.Name == "Diluc" || value.Name == "Mona" || value.Name == "Qiqi" || value.Name == "Tighnari" {
 						DummyData.RateOn = true
@@ -240,8 +227,8 @@ func main() {
 					}
 				}
 			} else if rarity == 4 { //☆☆☆☆
-				f.SetCellValue(currentBanner, fmt.Sprintf("D%v", strconv.Itoa(i+loopcounter)), "☆☆☆☆")
-				errB4 = f.SetCellStyle(currentBanner, fmt.Sprintf("A%v", strconv.Itoa(i+loopcounter)), fmt.Sprintf("D%v", strconv.Itoa(i+loopcounter)), styleB4)
+				f.SetCellValues([]string{currentBanner}, 'D', i+loopcounter, []interface{}{"☆☆☆☆"})
+				f.SetCellStyle(currentBanner, fmt.Sprintf("A%v", strconv.Itoa(i+loopcounter)), fmt.Sprintf("D%v", strconv.Itoa(i+loopcounter)), styleB4)
 				if DummyData.Last4StarsFlag == false {
 					DummyData.Last4Stars = value.Name
 					DummyData.Last4StarsFlag = true
@@ -279,8 +266,8 @@ func main() {
 					}
 				}
 			} else { //☆☆☆
-				f.SetCellValue(currentBanner, fmt.Sprintf("D%v", strconv.Itoa(i+loopcounter)), "☆☆☆")
-				errB3 = f.SetCellStyle(currentBanner, fmt.Sprintf("A%v", strconv.Itoa(i+loopcounter)), fmt.Sprintf("D%v", strconv.Itoa(i+loopcounter)), styleB3)
+				f.SetCellValues([]string{currentBanner}, 'D', i+loopcounter, []interface{}{"☆☆☆"})
+				f.SetCellStyle(currentBanner, fmt.Sprintf("A%v", strconv.Itoa(i+loopcounter)), fmt.Sprintf("D%v", strconv.Itoa(i+loopcounter)), styleB3)
 			}
 			totalwish++
 			MainCounter++
@@ -297,22 +284,17 @@ func main() {
 				q.Set("init_type", "302")
 				q.Set("gacha_type", "302")
 				q.Set("end_id", "0")
-				errHeader = f.SetCellStyle(currentBanner, "A1", "D1", styleHeader)
-				f.SetCellValue(currentBanner, "F1", "Total Wish:")
-				f.SetCellValue(currentBanner, "G1", totalwish)
-				f.SetCellValue(currentBanner, "F2", "Rate ON")
-				f.SetCellValue(currentBanner, "G2", DummyData.RateOn)
-				errHeader = f.SetCellStyle(currentBanner, "F1", "G2", styleHeader)
-				f.SetCellValue(currentBanner, "F3", "Last 5 Stars")
-				f.SetCellValue(currentBanner, "G3", DummyData.Last5Stars)
-				f.SetCellValue(currentBanner, "F4", "Wish Until Next 5 Stars Estimate")
-				f.SetCellValue(currentBanner, "G4", 90-DummyData.CountAfterLast5Stars)
-				errB5 = f.SetCellStyle(currentBanner, "F3", "G4", styleB5)
-				f.SetCellValue(currentBanner, "F5", "Last 4 Stars")
-				f.SetCellValue(currentBanner, "G5", DummyData.Last4Stars)
-				f.SetCellValue(currentBanner, "F6", "Wish Until Next 4 Stars Estimate")
-				f.SetCellValue(currentBanner, "G6", 10-DummyData.CountAfterLast4Stars)
-				errB4 = f.SetCellStyle(currentBanner, "F5", "G6", styleB4)
+				f.SetCellStyle(currentBanner, "A1", "D1", styleHeader)
+				f.SetCellValues([]string{currentBanner}, 'F', 1, []interface{}{"Total Wish:", totalwish})
+				f.SetCellValues([]string{currentBanner}, 'F', 2, []interface{}{"Rate ON", DummyData.RateOn})
+				f.SetCellStyle(currentBanner, "F1", "G2", styleHeader)
+				f.SetCellValues([]string{currentBanner}, 'F', 3, []interface{}{"Last 5 Stars", DummyData.Last5Stars})
+				f.SetCellValues([]string{currentBanner}, 'F', 4, []interface{}{"Wish Until Next 5 Stars Estimate", 90 - DummyData.CountAfterLast5Stars})
+				f.SetCellStyle(currentBanner, "F3", "G4", styleB5)
+				f.SetCellValues([]string{currentBanner}, 'F', 5, []interface{}{"Last 4 Stars", DummyData.Last4Stars})
+				f.SetCellValues([]string{currentBanner}, 'F', 6, []interface{}{"Wish Until Next 4 Stars Estimate", 10 - DummyData.CountAfterLast4Stars})
+				f.SetCellStyle(currentBanner, "F5", "G6", styleB4)
+
 				EventCounter = totalwish
 				totalwish = 0
 				loopcounter = 2
@@ -324,44 +306,32 @@ func main() {
 				q.Set("gacha_type", "200")
 				q.Set("end_id", "0")
 				loopcounter = 2
-				errHeader = f.SetCellStyle(currentBanner, "A1", "D1", styleHeader)
-				f.SetCellValue(currentBanner, "F1", "Total Wish:")
-				f.SetCellValue(currentBanner, "G1", totalwish)
-				f.SetCellValue(currentBanner, "F2", "Rate ON")
-				f.SetCellValue(currentBanner, "G2", DummyData.RateOn)
-				errHeader = f.SetCellStyle(currentBanner, "F1", "G2", styleHeader)
-				f.SetCellValue(currentBanner, "F3", "Last 5 Stars")
-				f.SetCellValue(currentBanner, "G3", DummyData.Last5Stars)
-				f.SetCellValue(currentBanner, "F4", "Wish Until Next 5 Stars Estimate")
-				f.SetCellValue(currentBanner, "G4", 90-DummyData.CountAfterLast5Stars)
-				errB5 = f.SetCellStyle(currentBanner, "F3", "G4", styleB5)
-				f.SetCellValue(currentBanner, "F5", "Last 4 Stars")
-				f.SetCellValue(currentBanner, "G5", DummyData.Last4Stars)
-				f.SetCellValue(currentBanner, "F6", "Wish Until Next 4 Stars Estimate")
-				f.SetCellValue(currentBanner, "G6", 10-DummyData.CountAfterLast4Stars)
-				errB4 = f.SetCellStyle(currentBanner, "F5", "G6", styleB4)
+				f.SetCellStyle(currentBanner, "A1", "D1", styleHeader)
+				f.SetCellValues([]string{currentBanner}, 'F', 1, []interface{}{"Total Wish:", totalwish})
+				f.SetCellValues([]string{currentBanner}, 'F', 2, []interface{}{"Rate ON", DummyData.RateOn})
+				f.SetCellStyle(currentBanner, "F1", "G2", styleHeader)
+				f.SetCellValues([]string{currentBanner}, 'F', 3, []interface{}{"Last 5 Stars", DummyData.Last5Stars})
+				f.SetCellValues([]string{currentBanner}, 'F', 4, []interface{}{"Wish Until Next 5 Stars Estimate", 90 - DummyData.CountAfterLast5Stars})
+				f.SetCellStyle(currentBanner, "F3", "G4", styleB5)
+				f.SetCellValues([]string{currentBanner}, 'F', 5, []interface{}{"Last 4 Stars", DummyData.Last4Stars})
+				f.SetCellValues([]string{currentBanner}, 'F', 6, []interface{}{"Wish Until Next 4 Stars Estimate", 10 - DummyData.CountAfterLast4Stars})
+				f.SetCellStyle(currentBanner, "F5", "G6", styleB4)
 				WeaponCounter = totalwish
 				totalwish = 0
 				currentBanner = "Standard Banner"
 				DummyData.Last4StarsFlag = false
 				DummyData.Last5StarsFlag = false
 			} else if currentBanner == "Standard Banner" {
-				errHeader = f.SetCellStyle(currentBanner, "A1", "D1", styleHeader)
-				f.SetCellValue(currentBanner, "F1", "Total Wish:")
-				f.SetCellValue(currentBanner, "G1", totalwish)
-				f.SetCellValue(currentBanner, "F2", "Rate ON")
-				f.SetCellValue(currentBanner, "G2", DummyData.RateOn)
-				errHeader = f.SetCellStyle(currentBanner, "F1", "G2", styleHeader)
-				f.SetCellValue(currentBanner, "F3", "Last 5 Stars")
-				f.SetCellValue(currentBanner, "G3", DummyData.Last5Stars)
-				f.SetCellValue(currentBanner, "F4", "Wish Until Next 5 Stars Estimate")
-				f.SetCellValue(currentBanner, "G4", 90-DummyData.CountAfterLast5Stars)
-				errB5 = f.SetCellStyle(currentBanner, "F3", "G4", styleB5)
-				f.SetCellValue(currentBanner, "F5", "Last 4 Stars")
-				f.SetCellValue(currentBanner, "G5", DummyData.Last4Stars)
-				f.SetCellValue(currentBanner, "F6", "Wish Until Next 4 Stars Estimate")
-				f.SetCellValue(currentBanner, "G6", 10-DummyData.CountAfterLast4Stars)
-				errB4 = f.SetCellStyle(currentBanner, "F5", "G6", styleB4)
+				f.SetCellStyle(currentBanner, "A1", "D1", styleHeader)
+				f.SetCellValues([]string{currentBanner}, 'F', 1, []interface{}{"Total Wish:", totalwish})
+				f.SetCellValues([]string{currentBanner}, 'F', 2, []interface{}{"Rate ON", DummyData.RateOn})
+				f.SetCellStyle(currentBanner, "F1", "G2", styleHeader)
+				f.SetCellValues([]string{currentBanner}, 'F', 3, []interface{}{"Last 5 Stars", DummyData.Last5Stars})
+				f.SetCellValues([]string{currentBanner}, 'F', 4, []interface{}{"Wish Until Next 5 Stars Estimate", 90 - DummyData.CountAfterLast5Stars})
+				f.SetCellStyle(currentBanner, "F3", "G4", styleB5)
+				f.SetCellValues([]string{currentBanner}, 'F', 5, []interface{}{"Last 4 Stars", DummyData.Last4Stars})
+				f.SetCellValues([]string{currentBanner}, 'F', 6, []interface{}{"Wish Until Next 4 Stars Estimate", 10 - DummyData.CountAfterLast4Stars})
+				f.SetCellStyle(currentBanner, "F5", "G6", styleB4)
 				StandardCounter = totalwish
 			}
 		}
@@ -389,48 +359,37 @@ func main() {
 		}
 	}
 
-	f.NewSheet("Inventory")
-	f.SetCellValue("Inventory", "A1", "Character Name")
-	f.SetCellValue("Inventory", "B1", "Quantity")
-	f.SetCellValue("Inventory", "C1", "Rarity")
+	f.GenerateSheets([]string{Inventory})
+	f.SetCellValues([]string{Inventory}, 'A', 1, []interface{}{"Character Name", "Quantity", "Rarity"})
 
-	f.SetCellValue("Inventory", "E1", "Weapon Name")
-	f.SetCellValue("Inventory", "F1", "Quantity")
-	f.SetCellValue("Inventory", "G1", "Rarity")
-	errHeader = f.SetCellStyle("Inventory", "A1", "C1", styleHeader)
-	errHeader = f.SetCellStyle("Inventory", "E1", "G1", styleHeader)
+	f.SetCellValues([]string{Inventory}, 'E', 1, []interface{}{"Weapon Name", "Quantity", "Rarity"})
+	f.SetCellStyle("Inventory", "A1", "C1", styleHeader)
+	f.SetCellStyle("Inventory", "E1", "G1", styleHeader)
 	f.SetColWidth("Inventory", "A", "G", 20)
 	loopcounter = 2
 	for index, items := range MyCharacters[0].ItemLists {
-		f.SetCellValue("Inventory", fmt.Sprintf("A%v", strconv.Itoa(index+loopcounter)), items.Name)
-		f.SetCellValue("Inventory", fmt.Sprintf("B%v", strconv.Itoa(index+loopcounter)), items.Quantity)
-		f.SetCellValue("Inventory", fmt.Sprintf("C%v", strconv.Itoa(index+loopcounter)), "☆☆☆☆☆")
-		errB5 = f.SetCellStyle("Inventory", fmt.Sprintf("A%v", strconv.Itoa(index+loopcounter)), fmt.Sprintf("C%v", strconv.Itoa(index+loopcounter)), styleB5)
+		f.SetCellValues([]string{Inventory}, 'A', index+loopcounter, []interface{}{items.Name, items.Quantity, "☆☆☆☆☆"})
+		f.SetCellStyle("Inventory", fmt.Sprintf("A%v", strconv.Itoa(index+loopcounter)), fmt.Sprintf("C%v", strconv.Itoa(index+loopcounter)), styleB5)
 	}
 	loopcounter += len(MyCharacters[0].ItemLists)
 	for index, items := range MyCharacters[1].ItemLists {
-		f.SetCellValue("Inventory", fmt.Sprintf("A%v", strconv.Itoa(index+loopcounter)), items.Name)
-		f.SetCellValue("Inventory", fmt.Sprintf("B%v", strconv.Itoa(index+loopcounter)), items.Quantity)
-		f.SetCellValue("Inventory", fmt.Sprintf("C%v", strconv.Itoa(index+loopcounter)), "☆☆☆☆")
-		errB4 = f.SetCellStyle("Inventory", fmt.Sprintf("A%v", strconv.Itoa(index+loopcounter)), fmt.Sprintf("C%v", strconv.Itoa(index+loopcounter)), styleB4)
+		f.SetCellValues([]string{Inventory}, 'A', index+loopcounter, []interface{}{items.Name, items.Quantity, "☆☆☆☆"})
+		f.SetCellStyle("Inventory", fmt.Sprintf("A%v", strconv.Itoa(index+loopcounter)), fmt.Sprintf("C%v", strconv.Itoa(index+loopcounter)), styleB4)
 	}
 
 	loopcounter = 2
 	for index, items := range MyWeapons[0].ItemLists {
-		f.SetCellValue("Inventory", fmt.Sprintf("E%v", strconv.Itoa(index+loopcounter)), items.Name)
-		f.SetCellValue("Inventory", fmt.Sprintf("F%v", strconv.Itoa(index+loopcounter)), items.Quantity)
-		f.SetCellValue("Inventory", fmt.Sprintf("G%v", strconv.Itoa(index+loopcounter)), "☆☆☆☆☆")
-		errB5 = f.SetCellStyle("Inventory", fmt.Sprintf("E%v", strconv.Itoa(index+loopcounter)), fmt.Sprintf("G%v", strconv.Itoa(index+loopcounter)), styleB5)
+		f.SetCellValues([]string{Inventory}, 'E', index+loopcounter, []interface{}{items.Name, items.Quantity, "☆☆☆☆☆"})
+		f.SetCellStyle("Inventory", fmt.Sprintf("E%v", strconv.Itoa(index+loopcounter)), fmt.Sprintf("G%v", strconv.Itoa(index+loopcounter)), styleB5)
 	}
 	loopcounter += len(MyWeapons[0].ItemLists)
 	for index, items := range MyWeapons[1].ItemLists {
-		f.SetCellValue("Inventory", fmt.Sprintf("E%v", strconv.Itoa(index+loopcounter)), items.Name)
-		f.SetCellValue("Inventory", fmt.Sprintf("F%v", strconv.Itoa(index+loopcounter)), items.Quantity)
-		f.SetCellValue("Inventory", fmt.Sprintf("G%v", strconv.Itoa(index+loopcounter)), "☆☆☆☆")
-		errB4 = f.SetCellStyle("Inventory", fmt.Sprintf("E%v", strconv.Itoa(index+loopcounter)), fmt.Sprintf("G%v", strconv.Itoa(index+loopcounter)), styleB4)
+		f.SetCellValues([]string{Inventory}, 'E', index+loopcounter, []interface{}{items.Name, items.Quantity, "☆☆☆☆"})
+		f.SetCellStyle("Inventory", fmt.Sprintf("E%v", strconv.Itoa(index+loopcounter)), fmt.Sprintf("G%v", strconv.Itoa(index+loopcounter)), styleB4)
 	}
 
-	if err := f.SaveAs("Genshin-Wishing.xlsx"); err != nil {
-		fmt.Println(err)
+	err = f.SaveFile()
+	if err != nil {
+		panic(err)
 	}
 }

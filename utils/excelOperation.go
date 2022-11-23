@@ -45,13 +45,13 @@ func (e *Excel) ChangeSheetName(oldName, newName string) {
 	e.excelFile.SetSheetName(oldName, newName)
 }
 
-func (e *Excel) SetCellValues(sheets []string, column rune, row int, values []interface{}) error {
+func (e *Excel) SetCellValues(sheets []string, column rune, row int, values []interface{}) {
 	// Case yg hanya 1 value
 	if !(len(sheets) > 1) && !(len(values) > 1) {
 		axis := string(column) + strconv.Itoa(row)
 		err := e.excelFile.SetCellValue(sheets[0], axis, values[0])
 		if err != nil {
-			return err
+			panic(err)
 		}
 	}
 
@@ -65,15 +65,36 @@ func (e *Excel) SetCellValues(sheets []string, column rune, row int, values []in
 			axis := columnStr + rowStr
 			err := e.excelFile.SetCellValue(sheet, axis, value)
 			if err != nil {
-				return err
+				panic(err)
 			}
 			startColumn++
-			row++
 		}
 		startColumn = initColVal
 		row = initRowVal
 	}
-	return nil
+}
+
+func (e *Excel) MakeStyle(style interface{}) int {
+	styleInt, err := e.excelFile.NewStyle(style)
+
+	if err != nil {
+		panic(err)
+	}
+	return styleInt
+}
+
+func (e *Excel) SetColWidth(sheet, startCol, endCol string, width float64) {
+	err := e.excelFile.SetColWidth(sheet, startCol, endCol, width)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (e *Excel) SetCellStyle(sheet, hCell, vCell string, styleID int) {
+	err := e.excelFile.SetCellStyle(sheet, hCell, vCell, styleID)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (e *Excel) SaveFile() error {
