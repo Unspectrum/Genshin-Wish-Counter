@@ -85,7 +85,6 @@ func main() {
 		AuthAppId:  "webview_gacha",
 		InitType:   "301",
 		Lang:       "en",
-		AuthKey:    match,
 		Page:       "1",
 		Size:       "20",
 		EndId:      "0",

@@ -6,7 +6,6 @@ type GachaRequest struct {
 	AuthAppId  string `json:"auth_appid"`
 	InitType   string `json:"init_type"`
 	Lang       string `json:"lang"`
-	AuthKey    string `json:"authkey"`
 	Page       string `json:"page"`
 	Size       string `json:"size"`
 	EndId      string `json:"end_id"`
