@@ -106,6 +106,7 @@ func main() {
 	f.SetColWidth("Event Banner", "A", "G", 20)
 	f.SetColWidth("Weapon Banner", "A", "G", 20)
 	f.SetColWidth("Standard Banner", "A", "G", 20)
+
 	styleB5 := f.MakeStyle(&excelize.Style{
 		Fill: excelize.Fill{Type: "pattern", Color: []string{"#FFB13F"}, Pattern: 1},
 	})
