@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"os"
 	"os/exec"
 	"regexp"
@@ -28,19 +27,11 @@ func check(e error) {
 }
 
 const (
-	logLocation      = "\\AppData\\LocalLow\\miHoYo\\Genshin Impact\\output_log.txt"
-	dataFileLocation = "webCaches/Cache/Cache_Data/data_2"
-	warmUpStr        = "Warmup file "
-	streamAssetsStr  = "StreamingAssets"
+	logLocation = "\\AppData\\LocalLow\\miHoYo\\Genshin Impact\\output_log.txt"
+	exp         = "(authkey=.+?game_biz=)"
 )
 
 var API_URL = "https://hk4e-api-os.hoyoverse.com/event/gacha_info/api/getGachaLog"
-
-func GetInstallLocation(str string) string {
-	str = strings.ReplaceAll(str, warmUpStr, "")
-	str = strings.Split(str, "\\")[0]
-	return strings.ReplaceAll(str, streamAssetsStr, "")
-}
 
 var clear map[string]func() //create a map for storing clear funcs
 
@@ -74,22 +65,14 @@ func main() {
 	log := dir + logLocation
 	lines, err := utils.OpenFileToStringArray(log, "\n")
 	check(err)
-	// var temp string
-	var installLocation string
-	for _, line := range lines {
-		if strings.Contains(line, warmUpStr) {
-			installLocation = GetInstallLocation(line)
-			break
-		}
-	}
-	installLocation += dataFileLocation
-	DataOpen, err := utils.OpenReadFileToString(installLocation)
+
+	dataFileLocation := utils.GetDataFileLocation(lines)
+	DataOpen, err := utils.OpenReadFileToString(dataFileLocation)
 	if err != nil {
 		panic(err)
 	}
 
-	dataSplit := strings.Split(string(DataOpen), "1/0")
-	var exp = "(authkey=.+?game_biz=)"
+	dataSplit := strings.Split(DataOpen, "1/0")
 	re := regexp.MustCompile(exp)
 	match := re.FindStringSubmatch(dataSplit[len(dataSplit)-1])[0]
 	match = strings.ReplaceAll(match, "&game_biz=", "")
@@ -106,17 +89,11 @@ func main() {
 		EndId:      "0",
 		GachaType:  "301",
 	}
-	q := url.Values{}
-	q.Add("authkey_ver", ExampleGachaReq.AuthkeyVer)
-	q.Add("sign_type", ExampleGachaReq.SignType)
-	q.Add("auth_appid", ExampleGachaReq.AuthAppId)
-	q.Add("init_type", ExampleGachaReq.InitType)
-	q.Add("lang", ExampleGachaReq.Lang)
-	q.Add("authkey", ExampleGachaReq.AuthKey)
-	q.Add("page", ExampleGachaReq.Page)
-	q.Add("size", ExampleGachaReq.Size)
-	q.Add("end_id", ExampleGachaReq.EndId)
-	q.Add("gacha_type", ExampleGachaReq.GachaType)
+	params, err := ParseStructToJsonMap(ExampleGachaReq)
+	if err != nil {
+		panic(err)
+	}
+	q := utils.GenerateGetParameter(params)
 
 	f := excelize.NewFile()
 	f.SetSheetName("Sheet1", "Event Banner")

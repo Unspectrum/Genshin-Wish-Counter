@@ -6,6 +6,12 @@ import (
 	"strings"
 )
 
+const (
+	dataFileLocation = "webCaches/Cache/Cache_Data/data_2"
+	warmUpStr        = "Warmup file "
+	streamAssetsStr  = "StreamingAssets"
+)
+
 // Internal function to open file
 func openFile(filePath string) (*os.File, error) {
 	file, err := os.Open(filePath)
@@ -42,4 +48,23 @@ func OpenReadFileToString(str string) (string, error) {
 		return "", err
 	}
 	return string(b), nil
+}
+
+func ParseInstallLocation(str string) string {
+	str = strings.ReplaceAll(str, warmUpStr, "")
+	str = strings.Split(str, "\\")[0]
+	return strings.ReplaceAll(str, streamAssetsStr, "")
+}
+
+func GetDataFileLocation(str []string) string {
+	var installLocation string
+	for _, line := range str {
+		if strings.Contains(line, warmUpStr) {
+			installLocation = ParseInstallLocation(line)
+			break
+		}
+	}
+	installLocation += dataFileLocation
+
+	return installLocation
 }
