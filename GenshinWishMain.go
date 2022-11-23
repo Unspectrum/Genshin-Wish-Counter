@@ -31,7 +31,9 @@ const (
 	exp         = "(authkey=.+?game_biz=)"
 )
 
-var API_URL = "https://hk4e-api-os.hoyoverse.com/event/gacha_info/api/getGachaLog"
+var (
+	ApiUrl = "https://hk4e-api-os.hoyoverse.com/event/gacha_info/api/getGachaLog"
+)
 
 var clear map[string]func() //create a map for storing clear funcs
 
@@ -89,13 +91,14 @@ func main() {
 		EndId:      "0",
 		GachaType:  "301",
 	}
-	params, err := ParseStructToJsonMap(ExampleGachaReq)
+
+	params, err := utils.ParseStructToJsonMap(ExampleGachaReq)
 	if err != nil {
 		panic(err)
 	}
 	q := utils.GenerateGetParameter(params)
 
-	f := excelize.NewFile()
+	f := utils.NewExcel().ExcelFile()
 	f.SetSheetName("Sheet1", "Event Banner")
 	f.SetCellValue("Event Banner", "A1", "TimeStamp")
 	f.SetCellValue("Event Banner", "B1", "Name")
@@ -169,7 +172,7 @@ func main() {
 	StandardCounter := 0
 	MainCounter := 0
 	for {
-		API_URL_EXEC := API_URL + "?authkey=" + match + "&" + q.Encode()
+		API_URL_EXEC := ApiUrl + "?authkey=" + match + "&" + q.Encode()
 		response, err := http.Get(API_URL_EXEC)
 		if err != nil {
 			panic(err)
