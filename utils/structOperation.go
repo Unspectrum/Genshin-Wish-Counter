@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/fatih/structs"
 	"reflect"
+	"strings"
 )
 
 func GetJSONTag(obj interface{}) ([]string, error) {
@@ -29,11 +30,14 @@ func ParseStructToJsonMap(obj interface{}) (map[string]string, error) {
 	newStructMap := make(map[string]string)
 	oldStructMap := structs.Map(obj)
 
-	jsonTagIndex := 0
-	for _, val := range oldStructMap {
+	for key, val := range oldStructMap {
 		strVal, ok := val.(string)
 		if ok {
-			newStructMap[jsonTags[jsonTagIndex]] = strVal
+			for i := 0; i < len(jsonTags); i++ {
+				if strings.EqualFold(key, strings.ReplaceAll(jsonTags[i], "_", "")) {
+					newStructMap[jsonTags[i]] = strVal
+				}
+			}
 		}
 	}
 	return newStructMap, nil
