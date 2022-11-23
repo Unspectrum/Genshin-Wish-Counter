@@ -45,22 +45,22 @@ func (e *Excel) ChangeSheetName(oldName, newName string) {
 	e.excelFile.SetSheetName(oldName, newName)
 }
 
-func (e *Excel) SetCellValues(sheets []string, column string, row int, values []interface{}) error {
+func (e *Excel) SetCellValues(sheets []string, column rune, row int, values []interface{}) error {
 	// Case yg hanya 1 value
 	if !(len(sheets) > 1) && !(len(values) > 1) {
-		axis := column + strconv.Itoa(row)
+		axis := string(column) + strconv.Itoa(row)
 		err := e.excelFile.SetCellValue(sheets[0], axis, values[0])
 		if err != nil {
 			return err
 		}
 	}
 
-	startColumn, _ := strconv.ParseInt(column, 10, 32)
+	startColumn := int(column)
 	initRowVal := row
 	initColVal := startColumn
 	for _, sheet := range sheets {
 		for _, value := range values {
-			columnStr := strconv.FormatInt(startColumn, 10)
+			columnStr := string(rune(startColumn))
 			rowStr := strconv.Itoa(row)
 			axis := columnStr + rowStr
 			err := e.excelFile.SetCellValue(sheet, axis, value)
