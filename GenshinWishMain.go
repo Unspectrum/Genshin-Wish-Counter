@@ -97,7 +97,7 @@ func main() {
 	}
 	q := utils.GenerateGetParameter(params)
 
-	f := utils.NewExcel().ExcelFile()
+	f := utils.NewExcel("Genshin-Wishing.xlsx").ExcelFile()
 	f.SetSheetName("Sheet1", "Event Banner")
 	f.SetCellValue("Event Banner", "A1", "TimeStamp")
 	f.SetCellValue("Event Banner", "B1", "Name")
