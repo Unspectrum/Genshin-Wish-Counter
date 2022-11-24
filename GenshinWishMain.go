@@ -81,7 +81,7 @@ func main() {
 	if _err != nil {
 		panic(_err)
 	}
-	DataOpen, err := utils.OpenReadFileToString(projDir)
+	DataOpen, err := utils.OpenReadFileToString(dataFileLocation)
 	if err != nil {
 		fmt.Print("Could Open Cache")
 	}
@@ -186,8 +186,7 @@ func main() {
 		}
 
 		if GachaResponse.Data.List == nil {
-			fmt.Println("NILL")
-			break
+			continue
 		}
 		for i, value := range GachaResponse.Data.List {
 			rarity, _ := strconv.ParseInt(value.RankType, 10, 64)
