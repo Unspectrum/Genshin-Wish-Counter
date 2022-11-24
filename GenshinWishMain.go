@@ -15,7 +15,7 @@ import (
 
 	"github.com/Unspectrum/Genshin-Wish-Counter/models"
 	"github.com/Unspectrum/Genshin-Wish-Counter/utils"
-
+	cp "github.com/nmrshll/go-cp"
 	"github.com/xuri/excelize/v2"
 )
 
@@ -71,9 +71,19 @@ func main() {
 	check(err)
 
 	dataFileLocation := utils.GetDataFileLocation(lines)
-	DataOpen, err := utils.OpenReadFileToString(dataFileLocation)
+	currDir, err := os.Getwd()
 	if err != nil {
-		panic(err)
+		fmt.Println(currDir)
+		panic("Fail to Get Current Directory")
+	}
+	projDir := currDir + "\\cache"
+	_err := cp.CopyFile(dataFileLocation, projDir)
+	if _err != nil {
+		panic(_err)
+	}
+	DataOpen, err := utils.OpenReadFileToString(projDir)
+	if err != nil {
+		fmt.Print("Could Open Cache")
 	}
 
 	dataSplit := strings.Split(DataOpen, "1/0")
@@ -97,6 +107,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
 	q := utils.GenerateGetParameter(params)
 
 	f := utils.NewExcel("Genshin-Wishing.xlsx")
